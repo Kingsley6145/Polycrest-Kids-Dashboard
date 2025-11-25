@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import StatsCard from '../components/StatsCard'
 import EnrollmentFilters from '../components/EnrollmentFilters'
 import EnrollmentTable from '../components/EnrollmentTable'
 import EnrollmentDetail from '../components/EnrollmentDetail'
+import { fetchEnrollments } from '../services/enrollmentService'
 
 const defaultFilters = {
   search: '',
@@ -16,6 +17,25 @@ const Dashboard = () => {
   const [filters, setFilters] = useState(defaultFilters)
   const [enrollments, setEnrollments] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+
+  // Fetch enrollments from Firebase on component mount
+  useEffect(() => {
+    const unsubscribe = fetchEnrollments((enrollmentsData) => {
+      setEnrollments(enrollmentsData)
+    })
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  // Auto-select first enrollment when enrollments are loaded
+  useEffect(() => {
+    if (enrollments.length > 0 && !selectedId) {
+      setSelectedId(enrollments[0].id)
+    }
+  }, [enrollments, selectedId])
 
   const filteredEnrollments = useMemo(() => {
     return enrollments.filter((enrollment) => {
