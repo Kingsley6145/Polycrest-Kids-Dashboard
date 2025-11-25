@@ -1,4 +1,9 @@
-const EnrollmentDetail = ({ enrollment }) => {
+const EnrollmentDetail = ({
+  enrollment,
+  onStatusChange,
+  statusUpdating = false,
+  statusError = null
+}) => {
   if (!enrollment) {
     return (
       <aside className="enrollment-detail empty">
@@ -55,10 +60,29 @@ const EnrollmentDetail = ({ enrollment }) => {
       </div>
 
       <div className="detail-actions">
-        <button className="btn btn-outline">Need more info</button>
-        <button className="btn btn-secondary">Waitlist</button>
-        <button className="btn btn-primary">Approve</button>
+        <button
+          className="btn btn-outline"
+          disabled={statusUpdating}
+          onClick={() => onStatusChange?.('pending')}
+        >
+          {statusUpdating ? 'Saving...' : 'Need more info'}
+        </button>
+        <button
+          className="btn btn-secondary"
+          disabled={statusUpdating}
+          onClick={() => onStatusChange?.('waitlisted')}
+        >
+          {statusUpdating ? 'Saving...' : 'Waitlist'}
+        </button>
+        <button
+          className="btn btn-primary"
+          disabled={statusUpdating}
+          onClick={() => onStatusChange?.('approved')}
+        >
+          {statusUpdating ? 'Saving...' : 'Approve'}
+        </button>
       </div>
+      {statusError && <p className="error-text">{statusError}</p>}
     </aside>
   )
 }

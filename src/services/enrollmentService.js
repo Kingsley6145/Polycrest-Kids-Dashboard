@@ -1,4 +1,4 @@
-import { ref, onValue, get } from 'firebase/database'
+import { ref, onValue, get, update } from 'firebase/database'
 import { database } from '../config/firebase'
 
 /**
@@ -93,5 +93,23 @@ export const fetchEnrollments = (callback) => {
   )
   
   return unsubscribe
+}
+
+/**
+ * Update the status of a specific enrollment record.
+ * @param {string} enrollmentId
+ * @param {'pending' | 'approved' | 'waitlisted'} nextStatus
+ */
+export const updateEnrollmentStatus = async (enrollmentId, nextStatus) => {
+  if (!enrollmentId) {
+    throw new Error('Cannot update enrollment without an ID')
+  }
+
+  const enrollmentRef = ref(database, `enrollments/${enrollmentId}`)
+  console.log('Updating enrollment status:', { enrollmentId, nextStatus })
+
+  await update(enrollmentRef, {
+    status: nextStatus === 'approved' ? 'approved' : nextStatus === 'waitlisted' ? 'waitlisted' : 'pending'
+  })
 }
 

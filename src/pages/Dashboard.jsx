@@ -4,7 +4,7 @@ import StatsCard from '../components/StatsCard'
 import EnrollmentFilters from '../components/EnrollmentFilters'
 import EnrollmentTable from '../components/EnrollmentTable'
 import EnrollmentDetail from '../components/EnrollmentDetail'
-import { fetchEnrollments } from '../services/enrollmentService'
+import { fetchEnrollments, updateEnrollmentStatus } from '../services/enrollmentService'
 
 const defaultFilters = {
   search: '',
@@ -17,6 +17,10 @@ const Dashboard = () => {
   const [filters, setFilters] = useState(defaultFilters)
   const [enrollments, setEnrollments] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [statusUpdateState, setStatusUpdateState] = useState({
+    loading: false,
+    error: null
+  })
 
   // Fetch enrollments from Firebase on component mount
   useEffect(() => {
@@ -65,6 +69,26 @@ const Dashboard = () => {
 
     return filteredEnrollments.find((record) => record.id === selectedId) || filteredEnrollments[0]
   }, [filteredEnrollments, selectedId])
+
+  const handleStatusChange = async (enrollmentId, nextStatus) => {
+    if (!enrollmentId || !nextStatus) {
+      return
+    }
+
+    setStatusUpdateState({ loading: true, error: null })
+    try {
+      await updateEnrollmentStatus(enrollmentId, nextStatus)
+    } catch (error) {
+      console.error('Failed to update enrollment status:', error)
+      setStatusUpdateState({
+        loading: false,
+        error: 'Something went wrong while updating status.'
+      })
+      return
+    }
+
+    setStatusUpdateState({ loading: false, error: null })
+  }
 
   const overviewStats = useMemo(() => {
     const total = filteredEnrollments.length
@@ -225,7 +249,12 @@ const Dashboard = () => {
             selectedId={activeEnrollment?.id}
             onSelect={setSelectedId}
           />
-          <EnrollmentDetail enrollment={activeEnrollment} />
+          <EnrollmentDetail
+            enrollment={activeEnrollment}
+            onStatusChange={(nextStatus) => handleStatusChange(activeEnrollment?.id, nextStatus)}
+            statusUpdating={statusUpdateState.loading}
+            statusError={statusUpdateState.error}
+          />
         </div>
       </section>
     </DashboardLayout>
