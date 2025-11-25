@@ -40,6 +40,9 @@ const EnrollmentTable = ({ enrollments, selectedId, onSelect }) => {
               <td>
                 <p className="cell-primary">{enrollment.parentName}</p>
                 <p className="cell-secondary">{enrollment.parentEmail}</p>
+                {enrollment.parentPhone && (
+                  <p className="cell-secondary">{enrollment.parentPhone}</p>
+                )}
               </td>
               <td>
                 <p className="cell-primary">{enrollment.course}</p>

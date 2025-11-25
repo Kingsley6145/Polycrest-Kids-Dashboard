@@ -31,6 +31,7 @@ const EnrollmentDetail = ({
         <p className="detail-label">Parent / Guardian</p>
         <p className="detail-value">{enrollment.parentName}</p>
         <p className="detail-helper">{enrollment.parentEmail}</p>
+        {enrollment.parentPhone && <p className="detail-helper">{enrollment.parentPhone}</p>}
       </div>
 
       <div className="detail-card">
