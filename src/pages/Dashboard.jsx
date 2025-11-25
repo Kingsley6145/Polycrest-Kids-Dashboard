@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import StatsCard from '../components/StatsCard'
 import EnrollmentFilters from '../components/EnrollmentFilters'
@@ -14,6 +15,7 @@ const defaultFilters = {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
   const [enrollments, setEnrollments] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -244,11 +246,21 @@ const Dashboard = () => {
         />
 
         <div className="applications-content">
-          <EnrollmentTable
-            enrollments={filteredEnrollments}
-            selectedId={activeEnrollment?.id}
-            onSelect={setSelectedId}
-          />
+          <div className="applications-table-wrapper">
+            <EnrollmentTable
+              enrollments={filteredEnrollments.slice(0, 5)}
+              selectedId={activeEnrollment?.id}
+              onSelect={setSelectedId}
+            />
+            <div className="see-more-container">
+              <button 
+                className="btn btn-secondary see-more-btn"
+                onClick={() => navigate('/applications')}
+              >
+                See More
+              </button>
+            </div>
+          </div>
           <EnrollmentDetail
             enrollment={activeEnrollment}
             onStatusChange={(nextStatus) => handleStatusChange(activeEnrollment?.id, nextStatus)}

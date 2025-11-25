@@ -233,6 +233,55 @@
   margin-top: 1.5rem;
 }
 
+.applications-table-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.applications-table-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border-top: 1px solid var(--brand-border);
+  border-radius: 0 0 20px 20px;
+}
+
+.see-more-btn {
+  margin-top: 0;
+}
+
+.applications-section.full-view {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+}
+
+.applications-section.full-view .applications-content {
+  flex: 1;
+  grid-template-columns: 1.5fr 1fr;
+}
+
+.applications-section.full-view .applications-table-wrapper {
+  height: 100%;
+}
+
+.applications-section.full-view .applications-table-scroll {
+  height: 100%;
+}
+
+.applications-section.full-view .enrollment-detail {
+  position: sticky;
+  top: 2rem;
+}
+
 .enrollment-table {
   background: #fff;
   border-radius: 20px;

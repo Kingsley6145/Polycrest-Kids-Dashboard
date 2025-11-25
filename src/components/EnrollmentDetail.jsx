@@ -55,11 +55,6 @@ const EnrollmentDetail = ({
         </div>
       )}
 
-      <div className="detail-card">
-        <p className="detail-label">Notes</p>
-        <p className="detail-value copy">{enrollment.notes}</p>
-      </div>
-
       <div className="detail-actions">
         <button
           className="btn btn-outline"
