@@ -13,7 +13,13 @@ const EnrollmentDetail = ({ enrollment }) => {
       <header>
         <p className="eyebrow">Currently viewing</p>
         <h3>{enrollment.childName}</h3>
-        <p className="supporting-text">Submitted {new Date(enrollment.submittedAt).toLocaleString()}</p>
+        <p className="supporting-text">
+          Submitted {enrollment.submittedAt 
+            ? (typeof enrollment.submittedAt === 'number' 
+                ? new Date(enrollment.submittedAt).toLocaleString()
+                : new Date(enrollment.submittedAt).toLocaleString())
+            : 'Unknown date'}
+        </p>
       </header>
 
       <div className="detail-card">
@@ -30,16 +36,18 @@ const EnrollmentDetail = ({ enrollment }) => {
         </p>
       </div>
 
-      <div className="detail-card">
-        <p className="detail-label">Interests</p>
-        <div className="interest-chips">
-          {enrollment.interests.map((interest) => (
-            <span key={interest} className="chip filled">
-              {interest}
-            </span>
-          ))}
+      {enrollment.interests && enrollment.interests.length > 0 && (
+        <div className="detail-card">
+          <p className="detail-label">Interests</p>
+          <div className="interest-chips">
+            {enrollment.interests.map((interest) => (
+              <span key={interest} className="chip filled">
+                {interest}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="detail-card">
         <p className="detail-label">Notes</p>

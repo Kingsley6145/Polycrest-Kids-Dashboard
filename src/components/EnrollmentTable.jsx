@@ -48,7 +48,9 @@ const EnrollmentTable = ({ enrollments, selectedId, onSelect }) => {
               <td>
                 <p className="cell-primary">{enrollment.preferredTime}</p>
                 <p className="cell-secondary">
-                  Starts {new Date(enrollment.startDate).toLocaleDateString()}
+                  Starts {enrollment.startDate 
+                    ? new Date(enrollment.startDate).toLocaleDateString()
+                    : 'TBD'}
                 </p>
               </td>
               <td>

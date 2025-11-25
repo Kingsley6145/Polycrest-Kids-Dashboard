@@ -20,12 +20,16 @@ const Dashboard = () => {
 
   // Fetch enrollments from Firebase on component mount
   useEffect(() => {
+    console.log('Dashboard: Setting up Firebase listener...')
     const unsubscribe = fetchEnrollments((enrollmentsData) => {
+      console.log('Dashboard: Received enrollments data:', enrollmentsData)
+      console.log('Dashboard: Number of enrollments:', enrollmentsData.length)
       setEnrollments(enrollmentsData)
     })
 
     // Cleanup subscription on unmount
     return () => {
+      console.log('Dashboard: Cleaning up Firebase listener')
       unsubscribe()
     }
   }, [])
@@ -40,9 +44,9 @@ const Dashboard = () => {
   const filteredEnrollments = useMemo(() => {
     return enrollments.filter((enrollment) => {
       const matchesSearch =
-        enrollment.childName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enrollment.parentName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enrollment.id.toLowerCase().includes(filters.search.toLowerCase())
+        enrollment.childName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        enrollment.parentName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        enrollment.id?.toLowerCase().includes(filters.search.toLowerCase())
 
       const matchesCourse =
         filters.course === 'all' || enrollment.courseId === filters.course
@@ -52,7 +56,7 @@ const Dashboard = () => {
 
       return matchesSearch && matchesCourse && matchesStatus
     })
-  }, [filters])
+  }, [enrollments, filters])
 
   const activeEnrollment = useMemo(() => {
     if (!filteredEnrollments.length) {
@@ -124,11 +128,15 @@ const Dashboard = () => {
           enrollment.parentEmail,
           `"${enrollment.course}"`,
           enrollment.status,
-          new Date(enrollment.submittedAt).toLocaleDateString(),
+          enrollment.submittedAt 
+            ? (typeof enrollment.submittedAt === 'number' 
+                ? new Date(enrollment.submittedAt).toLocaleDateString()
+                : new Date(enrollment.submittedAt).toLocaleDateString())
+            : '',
           `"${enrollment.preferredTime}"`,
-          enrollment.startDate,
+          enrollment.startDate || '',
           enrollment.childAge,
-          `"${enrollment.interests.join(', ')}"`,
+          `"${(enrollment.interests || []).join(', ')}"`,
           `"${enrollment.notes || ''}"`
         ]
         return row.join(',')
