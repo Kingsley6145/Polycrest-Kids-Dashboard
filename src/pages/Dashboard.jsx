@@ -6,6 +6,7 @@ import EnrollmentFilters from '../components/EnrollmentFilters'
 import EnrollmentTable from '../components/EnrollmentTable'
 import EnrollmentDetail from '../components/EnrollmentDetail'
 import { fetchEnrollments, updateEnrollmentStatus } from '../services/enrollmentService'
+import { fetchCourses, saveCourse, deleteCourse } from '../services/courseService'
 
 const defaultFilters = {
   search: '',
@@ -13,6 +14,24 @@ const defaultFilters = {
   status: 'all',
   timeRange: '30d'
 }
+
+const createEmptyCourse = () => ({
+  title: '',
+  ageRange: '',
+  thumbnailUrl: '',
+  shortDescription: '',
+  whatYouWillLearn: [
+    {
+      title: '',
+      description: ''
+    }
+  ],
+  learningOutcomes: '',
+  duration: '',
+  schedule: '',
+  sessionLength: '',
+  prerequisites: ''
+})
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -23,6 +42,11 @@ const Dashboard = () => {
     loading: false,
     error: null
   })
+  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false)
+  const [isCoursesListOpen, setIsCoursesListOpen] = useState(false)
+  const [editingCourseId, setEditingCourseId] = useState(null)
+  const [courses, setCourses] = useState([])
+  const [newCourse, setNewCourse] = useState(createEmptyCourse)
 
   // Fetch enrollments from Firebase on component mount
   useEffect(() => {
@@ -37,6 +61,17 @@ const Dashboard = () => {
     return () => {
       console.log('Dashboard: Cleaning up Firebase listener')
       unsubscribe()
+    }
+  }, [])
+
+  // Fetch courses from Firebase on component mount
+  useEffect(() => {
+    const unsubscribe = fetchCourses((coursesData) => {
+      setCourses(coursesData)
+    })
+
+    return () => {
+      unsubscribe && unsubscribe()
     }
   }, [])
 
@@ -186,6 +221,109 @@ const Dashboard = () => {
     document.body.removeChild(link)
   }
 
+  const handleOpenAddCourse = () => {
+    setEditingCourseId(null)
+    setNewCourse(createEmptyCourse())
+    setIsAddCourseOpen(true)
+  }
+
+  const handleCloseAddCourse = () => {
+    setIsAddCourseOpen(false)
+  }
+
+  const handleNewCourseChange = (field, value) => {
+    setNewCourse((prev) => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleOpenCoursesList = () => {
+    setIsCoursesListOpen(true)
+  }
+
+  const handleCloseCoursesList = () => {
+    setIsCoursesListOpen(false)
+  }
+
+  const handleEditCourse = (courseId) => {
+    const course = courses.find((item) => item.id === courseId)
+    if (!course) {
+      return
+    }
+
+    setIsCoursesListOpen(false)
+    setEditingCourseId(courseId)
+    setNewCourse({
+      ...createEmptyCourse(),
+      ...course
+    })
+    setIsAddCourseOpen(true)
+  }
+
+  const handleDeleteCourse = async (courseId) => {
+    await deleteCourse(courseId)
+  }
+
+  const handleAddLearningPoint = () => {
+    setNewCourse((prev) => ({
+      ...prev,
+      whatYouWillLearn: [
+        ...prev.whatYouWillLearn,
+        {
+          title: '',
+          description: ''
+        }
+      ]
+    }))
+  }
+
+  const handleRemoveLearningPoint = (index) => {
+    setNewCourse((prev) => {
+      if (prev.whatYouWillLearn.length === 1) {
+        return prev
+      }
+
+      const next = prev.whatYouWillLearn.slice()
+      next.splice(index, 1)
+
+      return {
+        ...prev,
+        whatYouWillLearn: next
+      }
+    })
+  }
+
+  const handleLearningPointChange = (index, field, value) => {
+    setNewCourse((prev) => {
+      const next = prev.whatYouWillLearn.slice()
+      next[index] = {
+        ...next[index],
+        [field]: value
+      }
+
+      return {
+        ...prev,
+        whatYouWillLearn: next
+      }
+    })
+  }
+
+  const handleSubmitNewCourse = async (event) => {
+    event.preventDefault()
+
+    const savedId = await saveCourse(editingCourseId, newCourse)
+    console.log(
+      editingCourseId ? 'Updated course in Firebase:' : 'Created course in Firebase:',
+      { id: savedId, ...newCourse }
+    )
+
+    // Clear and close the modal after "saving"
+    setNewCourse(createEmptyCourse())
+    setEditingCourseId(null)
+    setIsAddCourseOpen(false)
+  }
+
   return (
     <DashboardLayout>
       <header className="dashboard-header">
@@ -199,6 +337,12 @@ const Dashboard = () => {
           <div className="header-actions">
             <button className="btn btn-secondary" onClick={handleDownloadCSV}>
               Download CSV
+            </button>
+            <button className="btn btn-outline" onClick={handleOpenCoursesList}>
+              Available Courses
+            </button>
+            <button className="btn btn-primary" onClick={handleOpenAddCourse}>
+              Add Course
             </button>
           </div>
         </div>
@@ -269,6 +413,274 @@ const Dashboard = () => {
           />
         </div>
       </section>
+
+      {isCoursesListOpen && (
+        <div className="modal-backdrop" onClick={handleCloseCoursesList}>
+          <div
+            className="modal-panel"
+            onClick={(event) => {
+              event.stopPropagation()
+            }}
+          >
+            <header className="modal-header">
+              <div>
+                <p className="eyebrow">Courses library</p>
+                <h2>Available Courses</h2>
+                <p className="supporting-text">
+                  Review every course you've added for Polycrest Kids and quickly edit or remove entries.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline small"
+                onClick={handleCloseCoursesList}
+              >
+                Close
+              </button>
+            </header>
+
+            <div className="modal-body">
+              {courses.length === 0 ? (
+                <p className="field-helper">
+                  You haven't added any courses yet. Use the Add Course button to create your first one.
+                </p>
+              ) : (
+                <ul className="courses-list">
+                  {courses.map((course) => (
+                    <li key={course.id} className="course-list-item">
+                      <div className="course-list-main">
+                        <h3>{course.title || 'Untitled course'}</h3>
+                        <p className="field-helper">
+                          {course.ageRange || 'Age range not set'}
+                        </p>
+                      </div>
+                      <div className="course-list-actions">
+                        <button
+                          type="button"
+                          className="btn btn-outline small"
+                          onClick={() => handleEditCourse(course.id)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary small"
+                          onClick={() => handleDeleteCourse(course.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAddCourseOpen && (
+        <div className="modal-backdrop" onClick={handleCloseAddCourse}>
+          <div
+            className="modal-panel"
+            onClick={(event) => {
+              event.stopPropagation()
+            }}
+          >
+            <header className="modal-header">
+              <div>
+                <p className="eyebrow">Create new course</p>
+                <h2>Add Course</h2>
+                <p className="supporting-text">
+                  Match the details used on the public website so cards and admin data stay in sync.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline small"
+                onClick={handleCloseAddCourse}
+              >
+                Close
+              </button>
+            </header>
+
+            <form className="modal-body" onSubmit={handleSubmitNewCourse}>
+              <div className="form-grid">
+                <div className="form-group full">
+                  <label>Course title</label>
+                  <input
+                    type="text"
+                    placeholder="Intro to Coding"
+                    value={newCourse.title}
+                    onChange={(event) => handleNewCourseChange('title', event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Age range</label>
+                  <input
+                    type="text"
+                    placeholder="Ages 10–12"
+                    value={newCourse.ageRange}
+                    onChange={(event) => handleNewCourseChange('ageRange', event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Thumbnail image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/intro-to-coding-thumbnail.png"
+                    value={newCourse.thumbnailUrl}
+                    onChange={(event) => handleNewCourseChange('thumbnailUrl', event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Short description</label>
+                  <textarea
+                    rows="3"
+                    placeholder="Hands-on labs that teach older kids core programming logic, block-based coding, and problem solving."
+                    value={newCourse.shortDescription}
+                    onChange={(event) =>
+                      handleNewCourseChange('shortDescription', event.target.value)
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>What you'll learn</label>
+                  <div className="learning-points-list">
+                    {newCourse.whatYouWillLearn.map((point, index) => (
+                      <div key={index} className="learning-point-item">
+                        <div className="learning-point-fields">
+                          <input
+                            type="text"
+                            placeholder="Block-based programming fundamentals"
+                            value={point.title}
+                            onChange={(event) =>
+                              handleLearningPointChange(index, 'title', event.target.value)
+                            }
+                          />
+                          <textarea
+                            rows="2"
+                            placeholder="Explain this topic in one or two short sentences."
+                            value={point.description}
+                            onChange={(event) =>
+                              handleLearningPointChange(index, 'description', event.target.value)
+                            }
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-outline small remove-point-btn"
+                          onClick={() => handleRemoveLearningPoint(index)}
+                          disabled={newCourse.whatYouWillLearn.length === 1}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary small"
+                      onClick={handleAddLearningPoint}
+                    >
+                      Add another point
+                    </button>
+                  </div>
+
+                  <div className="learning-points-preview">
+                    <p className="field-helper">Preview</p>
+                    {newCourse.whatYouWillLearn
+                      .filter((point) => point.title)
+                      .map((point, index) => (
+                        <details key={index} className="learning-point-preview">
+                          <summary>{point.title}</summary>
+                          {point.description && <p>{point.description}</p>}
+                        </details>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="form-group full">
+                  <label>Learning outcomes (one item per line)</label>
+                  <textarea
+                    rows="3"
+                    placeholder={`Understand core programming concepts\nCreate interactive projects\nDevelop logical thinking skills\nBuild confidence in technology`}
+                    value={newCourse.learningOutcomes}
+                    onChange={(event) =>
+                      handleNewCourseChange('learningOutcomes', event.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Duration</label>
+                  <input
+                    type="text"
+                    placeholder="12 weeks"
+                    value={newCourse.duration}
+                    onChange={(event) => handleNewCourseChange('duration', event.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Schedule</label>
+                  <input
+                    type="text"
+                    placeholder="2 sessions per week"
+                    value={newCourse.schedule}
+                    onChange={(event) => handleNewCourseChange('schedule', event.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Session length</label>
+                  <input
+                    type="text"
+                    placeholder="2 hours per session"
+                    value={newCourse.sessionLength}
+                    onChange={(event) =>
+                      handleNewCourseChange('sessionLength', event.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Prerequisites</label>
+                  <textarea
+                    rows="2"
+                    placeholder="No prior coding experience required"
+                    value={newCourse.prerequisites}
+                    onChange={(event) =>
+                      handleNewCourseChange('prerequisites', event.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <footer className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleCloseAddCourse}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Course
+                </button>
+              </footer>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }
