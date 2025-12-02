@@ -15,6 +15,8 @@ const defaultFilters = {
   timeRange: '30d'
 }
 
+const MAX_COURSES = 4
+
 const createEmptyCourse = () => ({
   title: '',
   ageRange: '',
@@ -222,6 +224,15 @@ const Dashboard = () => {
   }
 
   const handleOpenAddCourse = () => {
+    // Only enforce the max limit when creating a brand new course
+    if (!editingCourseId && courses.length >= MAX_COURSES) {
+      window.alert(
+        `You already have ${MAX_COURSES} available courses. ` +
+          'Please edit or delete one of the existing courses to make room for a new one.'
+      )
+      return
+    }
+
     setEditingCourseId(null)
     setNewCourse(createEmptyCourse())
     setIsAddCourseOpen(true)
@@ -262,6 +273,13 @@ const Dashboard = () => {
   }
 
   const handleDeleteCourse = async (courseId) => {
+    if (!courseId) return
+
+    const confirmed = window.confirm('Are you sure you want to delete this course?')
+    if (!confirmed) {
+      return
+    }
+
     await deleteCourse(courseId)
   }
 
@@ -312,6 +330,15 @@ const Dashboard = () => {
   const handleSubmitNewCourse = async (event) => {
     event.preventDefault()
 
+    // Safety check in case the modal was opened before the count reached the limit
+    if (!editingCourseId && courses.length >= MAX_COURSES) {
+      window.alert(
+        `You already have ${MAX_COURSES} available courses. ` +
+          'Please edit or delete one of the existing courses to make room for a new one.'
+      )
+      return
+    }
+
     const savedId = await saveCourse(editingCourseId, newCourse)
     console.log(
       editingCourseId ? 'Updated course in Firebase:' : 'Created course in Firebase:',
@@ -322,6 +349,14 @@ const Dashboard = () => {
     setNewCourse(createEmptyCourse())
     setEditingCourseId(null)
     setIsAddCourseOpen(false)
+  }
+
+  const getLearningOutcomeLines = (text) => {
+    if (!text) return []
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
   }
 
   return (
@@ -440,6 +475,12 @@ const Dashboard = () => {
             </header>
 
             <div className="modal-body">
+              {courses.length >= MAX_COURSES && (
+                <p className="field-helper warning-text">
+                  You have reached the maximum of {MAX_COURSES} available courses. To add a new
+                  course, first edit or delete one of the current courses.
+                </p>
+              )}
               {courses.length === 0 ? (
                 <p className="field-helper">
                   You haven't added any courses yet. Use the Add Course button to create your first one.
@@ -490,7 +531,7 @@ const Dashboard = () => {
             <header className="modal-header">
               <div>
                 <p className="eyebrow">Create new course</p>
-                <h2>Add Course</h2>
+                <h2>{editingCourseId ? 'Edit Course' : 'Add Course'}</h2>
                 <p className="supporting-text">
                   Match the details used on the public website so cards and admin data stay in sync.
                 </p>
@@ -531,8 +572,8 @@ const Dashboard = () => {
                 <div className="form-group">
                   <label>Thumbnail image URL</label>
                   <input
-                    type="url"
-                    placeholder="https://example.com/intro-to-coding-thumbnail.png"
+                    type="text"
+                    placeholder="https://example.com/intro-to-coding-thumbnail.png or /kidcoding3.jpeg"
                     value={newCourse.thumbnailUrl}
                     onChange={(event) => handleNewCourseChange('thumbnailUrl', event.target.value)}
                     required
@@ -618,6 +659,14 @@ const Dashboard = () => {
                       handleNewCourseChange('learningOutcomes', event.target.value)
                     }
                   />
+                  <div className="learning-outcomes-preview">
+                    <p className="field-helper">Preview</p>
+                    <ul>
+                      {getLearningOutcomeLines(newCourse.learningOutcomes).map((line, index) => (
+                        <li key={index}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 <div className="form-group">
