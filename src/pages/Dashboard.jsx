@@ -25,7 +25,9 @@ const createEmptyCourse = () => ({
   whatYouWillLearn: [
     {
       title: '',
-      description: ''
+      description: '',
+      subtopicTitle: '',
+      subtopicPoints: ['']
     }
   ],
   learningOutcomes: '',
@@ -290,7 +292,9 @@ const Dashboard = () => {
         ...prev.whatYouWillLearn,
         {
           title: '',
-          description: ''
+          description: '',
+          subtopicTitle: '',
+          subtopicPoints: ['']
         }
       ]
     }))
@@ -304,6 +308,80 @@ const Dashboard = () => {
 
       const next = prev.whatYouWillLearn.slice()
       next.splice(index, 1)
+
+      return {
+        ...prev,
+        whatYouWillLearn: next
+      }
+    })
+  }
+
+  const handleSubtopicTitleChange = (index, value) => {
+    handleLearningPointChange(index, 'subtopicTitle', value)
+  }
+
+  const handleSubtopicPointChange = (index, pointIndex, value) => {
+    setNewCourse((prev) => {
+      const next = prev.whatYouWillLearn.slice()
+      const currentPoint = next[index] || {}
+      const existingSubPoints = Array.isArray(currentPoint.subtopicPoints)
+        ? currentPoint.subtopicPoints.slice()
+        : []
+
+      existingSubPoints[pointIndex] = value
+
+      next[index] = {
+        ...currentPoint,
+        subtopicPoints: existingSubPoints
+      }
+
+      return {
+        ...prev,
+        whatYouWillLearn: next
+      }
+    })
+  }
+
+  const handleAddSubtopicPoint = (index) => {
+    setNewCourse((prev) => {
+      const next = prev.whatYouWillLearn.slice()
+      const currentPoint = next[index] || {}
+      const existingSubPoints = Array.isArray(currentPoint.subtopicPoints)
+        ? currentPoint.subtopicPoints.slice()
+        : []
+
+      existingSubPoints.push('')
+
+      next[index] = {
+        ...currentPoint,
+        subtopicPoints: existingSubPoints
+      }
+
+      return {
+        ...prev,
+        whatYouWillLearn: next
+      }
+    })
+  }
+
+  const handleRemoveSubtopicPoint = (index, pointIndex) => {
+    setNewCourse((prev) => {
+      const next = prev.whatYouWillLearn.slice()
+      const currentPoint = next[index] || {}
+      const existingSubPoints = Array.isArray(currentPoint.subtopicPoints)
+        ? currentPoint.subtopicPoints.slice()
+        : []
+
+      if (existingSubPoints.length <= 1) {
+        return prev
+      }
+
+      existingSubPoints.splice(pointIndex, 1)
+
+      next[index] = {
+        ...currentPoint,
+        subtopicPoints: existingSubPoints
+      }
 
       return {
         ...prev,
@@ -615,6 +693,66 @@ const Dashboard = () => {
                               handleLearningPointChange(index, 'description', event.target.value)
                             }
                           />
+
+                          <div className="subtopic-section">
+                            <label className="subtopic-label">Subtopic (optional)</label>
+                            <input
+                              type="text"
+                              placeholder="What kids learn"
+                              value={point.subtopicTitle || ''}
+                              onChange={(event) =>
+                                handleSubtopicTitleChange(index, event.target.value)
+                              }
+                            />
+
+                            <div className="subtopic-points">
+                              <p className="field-helper">
+                                List what kids learn as bullet points (one point per line).
+                              </p>
+                              {(Array.isArray(point.subtopicPoints)
+                                ? point.subtopicPoints
+                                : ['']
+                              ).map((subPoint, subIndex) => (
+                                <div key={subIndex} className="subtopic-point-row">
+                                  <span className="subtopic-bullet">•</span>
+                                  <input
+                                    type="text"
+                                    placeholder="Build simple games using blocks"
+                                    value={subPoint}
+                                    onChange={(event) =>
+                                      handleSubtopicPointChange(
+                                        index,
+                                        subIndex,
+                                        event.target.value
+                                      )
+                                    }
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline small subtopic-remove-btn"
+                                    onClick={() =>
+                                      handleRemoveSubtopicPoint(index, subIndex)
+                                    }
+                                    disabled={
+                                      (Array.isArray(point.subtopicPoints)
+                                        ? point.subtopicPoints.length
+                                        : 1) === 1
+                                    }
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ))}
+
+                              <button
+                                type="button"
+                                className="btn btn-secondary small subtopic-add-btn"
+                                onClick={() => handleAddSubtopicPoint(index)}
+                              >
+                                Add another bullet
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -644,6 +782,21 @@ const Dashboard = () => {
                         <details key={index} className="learning-point-preview">
                           <summary>{point.title}</summary>
                           {point.description && <p>{point.description}</p>}
+                          {point.subtopicTitle && (
+                            <div className="learning-subtopic-preview">
+                              <p className="learning-subtopic-title">{point.subtopicTitle}</p>
+                              {Array.isArray(point.subtopicPoints) &&
+                                point.subtopicPoints.filter(Boolean).length > 0 && (
+                                  <ul>
+                                    {point.subtopicPoints
+                                      .filter(Boolean)
+                                      .map((subPoint, i) => (
+                                        <li key={i}>{subPoint}</li>
+                                      ))}
+                                  </ul>
+                                )}
+                            </div>
+                          )}
                         </details>
                       ))}
                   </div>

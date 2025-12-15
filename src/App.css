@@ -542,6 +542,59 @@
   color: var(--brand-muted);
 }
 
+.subtopic-section {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(34, 31, 72, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.subtopic-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.subtopic-points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.subtopic-point-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subtopic-point-row input {
+  flex: 1;
+}
+
+.subtopic-bullet {
+  font-size: 1rem;
+  color: var(--brand-muted);
+}
+
+.subtopic-add-btn {
+  align-self: flex-start;
+}
+
+.subtopic-remove-btn {
+  white-space: nowrap;
+}
+
+.learning-subtopic-preview {
+  margin-top: 0.5rem;
+}
+
+.learning-subtopic-title {
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
 .courses-list {
   list-style: none;
   padding: 0;
