@@ -277,6 +277,19 @@
   height: 100%;
 }
 
+.applications-section.full-view .table-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem 0 1.5rem;
+}
+
+.table-pagination-info {
+  font-size: 0.85rem;
+  color: var(--brand-muted);
+}
+
 .applications-section.full-view .enrollment-detail {
   position: sticky;
   top: 2rem;

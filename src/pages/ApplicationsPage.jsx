@@ -13,6 +13,8 @@ const defaultFilters = {
   timeRange: '30d'
 }
 
+const ITEMS_PER_PAGE = 7
+
 const ApplicationsPage = () => {
   const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
@@ -22,6 +24,7 @@ const ApplicationsPage = () => {
     loading: false,
     error: null
   })
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Fetch enrollments from Firebase on component mount
   useEffect(() => {
@@ -45,6 +48,11 @@ const ApplicationsPage = () => {
       setSelectedId(enrollments[0].id)
     }
   }, [enrollments, selectedId])
+
+  // Reset to first page whenever filters change or new enrollments arrive
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters, enrollments.length])
 
   const filteredEnrollments = useMemo(() => {
     return enrollments.filter((enrollment) => {
@@ -70,6 +78,25 @@ const ApplicationsPage = () => {
 
     return filteredEnrollments.find((record) => record.id === selectedId) || filteredEnrollments[0]
   }, [filteredEnrollments, selectedId])
+
+  const totalPages = useMemo(() => {
+    if (!filteredEnrollments.length) return 1
+    return Math.ceil(filteredEnrollments.length / ITEMS_PER_PAGE)
+  }, [filteredEnrollments])
+
+  const paginatedEnrollments = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    return filteredEnrollments.slice(startIndex, endIndex)
+  }, [filteredEnrollments, currentPage])
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  }
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1))
+  }
 
   const handleStatusChange = async (enrollmentId, nextStatus) => {
     if (!enrollmentId || !nextStatus) {
@@ -126,11 +153,34 @@ const ApplicationsPage = () => {
           <div className="applications-table-wrapper">
             <div className="applications-table-scroll">
               <EnrollmentTable
-                enrollments={filteredEnrollments}
+                enrollments={paginatedEnrollments}
                 selectedId={activeEnrollment?.id}
                 onSelect={setSelectedId}
               />
             </div>
+            {filteredEnrollments.length > ITEMS_PER_PAGE && (
+              <div className="table-pagination">
+                <button
+                  type="button"
+                  className="btn btn-outline small"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="table-pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-outline small"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
           <EnrollmentDetail
             enrollment={activeEnrollment}
