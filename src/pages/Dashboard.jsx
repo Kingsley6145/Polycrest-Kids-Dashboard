@@ -34,7 +34,8 @@ const createEmptyCourse = () => ({
   duration: '',
   schedule: '',
   sessionLength: '',
-  prerequisites: ''
+  prerequisites: '',
+  interactiveDemoUrl: ''
 })
 
 const Dashboard = () => {
@@ -864,6 +865,21 @@ const Dashboard = () => {
                       handleNewCourseChange('prerequisites', event.target.value)
                     }
                   />
+                </div>
+
+                <div className="form-group full">
+                  <label>Interactive demo link (optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/interactive-demo"
+                    value={newCourse.interactiveDemoUrl || ''}
+                    onChange={(event) =>
+                      handleNewCourseChange('interactiveDemoUrl', event.target.value)
+                    }
+                  />
+                  <p className="field-helper">
+                    This link will be used for the “Interactive Demo” button on the website.
+                  </p>
                 </div>
               </div>
 

@@ -27,6 +27,7 @@ const processCourseData = (data) => {
       schedule: course.schedule || '',
       sessionLength: course.sessionLength || '',
       prerequisites: course.prerequisites || '',
+      interactiveDemoUrl: course.interactiveDemoUrl || '',
       createdAt: course.createdAt || null,
       updatedAt: course.updatedAt || null
     }
