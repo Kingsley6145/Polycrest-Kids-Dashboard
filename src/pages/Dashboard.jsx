@@ -438,6 +438,14 @@ const Dashboard = () => {
       .filter(Boolean)
   }
 
+  const getPrerequisiteLines = (text) => {
+    if (!text) return []
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+  }
+
   return (
     <DashboardLayout>
       <header className="dashboard-header">
@@ -856,15 +864,23 @@ const Dashboard = () => {
                 </div>
 
                 <div className="form-group full">
-                  <label>Prerequisites</label>
+                  <label>Prerequisites (one item per line)</label>
                   <textarea
-                    rows="2"
-                    placeholder="No prior coding experience required"
+                    rows="3"
+                    placeholder={`No prior coding experience required\nComfort using a computer\nBasic reading skills`}
                     value={newCourse.prerequisites}
                     onChange={(event) =>
                       handleNewCourseChange('prerequisites', event.target.value)
                     }
                   />
+                  <div className="learning-outcomes-preview">
+                    <p className="field-helper">Preview</p>
+                    <ul>
+                      {getPrerequisiteLines(newCourse.prerequisites).map((line, index) => (
+                        <li key={index}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 <div className="form-group full">
